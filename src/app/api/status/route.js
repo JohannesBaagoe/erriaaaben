@@ -1,3 +1,23 @@
+
+const { kv } = require('@vercel/kv');
+
+async function ReplaceLineOfText(text) {
+  await kv.set('text', text);
+  console.log('Text saved to KV:', text);
+}
+
+async function GetLineOfText() {
+    const text = await kv.get('text');
+    if (text) {
+      console.log('Text retrieved from KV:', text);
+      return text;
+    } else {
+      console.log('No text found in KV');
+      return '';
+    }
+  }
+
+
 export async function POST(request) {
 
     try {
@@ -7,11 +27,10 @@ export async function POST(request) {
         // Check if the token is valid
         if (body.token === 'diller') {
             // Write the status to a file
-            const fs = require('fs');
-            fs.writeFileSync('status.txt', body.status);
+            ReplaceLineOfText(body.status)
 
             // Return a successful response
-            return new Response(JSON.stringify({ message: 'Status written to file' }), {
+            return new Response(JSON.stringify({ message: 'Status written to KV' }), {
                 headers: { 'Content-Type': 'application/json' },
                 status: 200
             });
@@ -38,10 +57,10 @@ export async function POST(request) {
 export async function GET(req) {
     try {
       if (req.method === 'GET') {
-        const fs = require('fs');
-        const statusData = fs.readFileSync('status.txt', 'utf-8');
+        const statusData = await GetLineOfText();
+        console.log(statusData);
 
-        return new Response(JSON.stringify({ status: statusData }), {
+        return new Response(JSON.stringify({status: statusData}), {
             headers: { 'Content-Type': 'application/json' },
             status: 200
         });        
